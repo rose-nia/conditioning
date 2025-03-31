@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name=viewport content="width=device-width, initial-scale=1">
 
-    <meta name="google-site-verification" content="el0x0SQRusXYUoq4zn7ELpAXK5IKisS34JrdzM7VNp0" />
-    <!-- needed here because signin2.render has no clientId parameter -->
-    <meta name="google-signin-client_id" content="180558660158-79v5qhc91h84hotb3526l7t3co9n7qu7.apps.googleusercontent.com">
+    <!--<meta name="google-site-verification" content="el0x0SQRusXYUoq4zn7ELpAXK5IKisS34JrdzM7VNp0" />
+     needed here because signin2.render has no clientId parameter -->
+    <meta name="google-signin-client_id" content="365428129649-e015ktlfsfksp07i6gv4b64geh12sheb.apps.googleusercontent.com">
 
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
 
@@ -180,11 +180,12 @@
       <a class="close">×</a>
       <a id="play-pause" class="play-pause"></a>
       <ol class="indicator"></ol>
+      <h3 class="description text-center"></h3>
     </div>
 
     <script type="text/javascript">
       // Client ID and API key from the Developer Console
-      var CLIENT_ID = "180558660158-79v5qhc91h84hotb3526l7t3co9n7qu7.apps.googleusercontent.com";
+      var CLIENT_ID = "365428129649-e015ktlfsfksp07i6gv4b64geh12sheb.apps.googleusercontent.com";
 
       // Array of API discovery doc URLs for APIs
       var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
@@ -358,6 +359,7 @@
       function listFiles(folderId){
         sissy.urls = [];
 
+        sissy.fileNames = [];
         gapi.client.drive.files.list({
           'q': "trashed=false and '" + folderId + "' in parents and mimeType != 'application/vnd.google-apps.folder' and mimeType != 'application/vnd.google-apps.drive-sdk'",
           'fields': "files(id, name)",
@@ -369,6 +371,8 @@
 
               for(var i=0; i < files.length; i++){
                 sissy.urls.push("https://lh3.google.com/d/" + files[i].id);
+                console.log(files[i].name);
+		            sissy.fileNames.push(files[i].name);
               }
 
               document.getElementById("folder-help").innerHTML = "Loaded " + sissy.urls.length + " images.";
@@ -439,13 +443,16 @@
         icon.classList.remove("hidden");
       }
 
-      function shuffle(array) {
+      function shuffle(array, names) {
           var j, x, i;
           for (i = array.length - 1; i > 0; i--) {
               j = Math.floor(Math.random() * (i + 1));
               x = array[i];
               array[i] = array[j];
               array[j] = x;
+              x = names[i];
+              names[i] = names[j];
+              names[j] = x;
           }
       }
 
@@ -511,15 +518,33 @@
 
         if(!sissy.gallery){
           var urls = sissy.urls.slice();
+          var fileNames = sissy.fileNames.slice();
           if(sissy.shuffleCheckbox.checked){
-            shuffle(urls);
+            shuffle(urls, fileNames);
           }
 
           if(sissy.limitValue > 0) {
             urls = urls.slice(0,sissy.limitValue);
           }
 
-          sissy.gallery = blueimp.Gallery(urls, {onclose:stop, preloadRange: 4});
+          sissy.gallery = blueimp.Gallery(urls, {
+            onclose:stop, preloadRange: 4, onslide: function(index, slide) {
+              var mantra = fileNames[index].match("cock|suck|fuck|girl|door")
+              if(mantra) {
+                mantra = mantras[mantra[0]]
+                console.log(mantra)
+              }
+              else {
+                mantra = ""
+              }
+              var node = this.container.find('.description')
+              node.empty()
+              if (mantra) {
+                node[0].appendChild(document.createTextNode(mantra))
+              }
+            }
+
+          });
 
           if(sissy.beats > 0){
             // custom event listeners have to be added after gallery ones, so they will be called first
@@ -538,7 +563,9 @@
           sissy.metronome = setTimeout(tick, 1000/(sissy.beats/60));
           document.getElementById("blueimp-gallery").classList.add("blueimp-gallery-playing");
           sissy.playing = true;
+          sissy.fullScreen = true;
         }
+        document.documentElement.webkitRequestFullScreen();
       }
 
       function stopMetronome(){
@@ -657,6 +684,13 @@
         sissy.limitInput.value = args_limit;
         sissy.limitInput.dispatchEvent(new Event("change"));
       }
+      var mantras = {
+	      "cock": "I love cock",
+	      "fuck": "I must submit and serve",
+	      "suck": "I want to suck cock, i need to suck cock",
+	      "door": "Offer a smile and open the door, worship and serve like never before",
+	      "girl": "I aspire to be like you"
+      };
     </script>
 
     <script async defer src="https://apis.google.com/js/api.js"
